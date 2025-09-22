@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en" >
+<head>
+  <meta charset="UTF-8">
+  <title>3D Realistic Bee</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+@import url("https://fonts.cdnfonts.com/css/devil-breeze");
+@import url("https://fonts.cdnfonts.com/css/poppins");
+@import url("https://fonts.cdnfonts.com/css/bimbo");
+
+body {
+  margin: 0;
+  font-family: "Montserrat", sans-serif;
+  background-color: #1b1b1b;
+  color: #eef8ce;
+  font-family: "Poppins", sans-serif;
+  font-size: 14px;
+  background-image: url(https://assets.codepen.io/453571/bg.avif),
+    repeating-linear-gradient(
+      to right,
+      transparent 0 500px,
+      #73814b33 500px 501px
+    );
+  background-size: 100%;
+}
+*::-webkit-scrollbar {
+  width: 0;
+}
+
+* {
+  padding: 0;
+  margin: 0;
+  list-style: none;
+  box-sizing: border-box;
+}
+.section {
+  width: 100%;
+  min-height: 100vh;
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.content-fit {
+  width: min(1200px, 90vw);
+  margin: auto;
+  min-height: 100vh;
+  position: relative;
+  padding-block: 10em;
+}
+header {
+  padding-block: 1em;
+  position: fixed;
+  top: 0;
+  width: 100%;
+  z-index: 10px;
+  -webkit-backdrop-filter: blur(20px);
+          backdrop-filter: blur(20px);
+  z-index: 100;
+  background-color: #1b1b1b11;
+  background-image: repeating-linear-gradient(
+    to right,
+    transparent 0 500px,
+    #eee1 500px 501px
+  );
+}
+header .content-fit {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  min-height: unset !important;
+  padding-block: unset !important;
+}
+header .content-fit nav ul {
+  display: flex;
+  gap: 2em;
+}
+
+#banner .title {
+  color: #d1ff48;
+  font-size: 11em;
+  font-family: "devil breeze";
+  font-weight: bold;
+  position: relative;
+  overflow: visible;
+  text-align: center;
+}
+#banner .title::before {
+  content: attr(data-before);
+  position: absolute;
+  z-index: -1;
+  color: oklch(0.78 0.17 80.01 / 0.19);
+  -webkit-mask: linear-gradient(
+    to bottom,
+    #000 -80%,
+    oklch(0 0 0/0),
+    #000,
+    oklch(0 0 0/0) 200%
+  );
+          mask: linear-gradient(
+    to bottom,
+    #000 -80%,
+    oklch(0 0 0/0),
+    #000,
+    oklch(0 0 0/0) 200%
+  );
+  transform: scaleY(-1) translateY(-0.44lh);
+}
+.section .decorate {
+  position: fixed;
+  z-index: -100;
+  pointer-events: none;
+}
+#intro .content-fit {
+  display: flex;
+  gap: 30%;
+  justify-content: space-between;
+  align-items: center;
+}
+.section .number {
+  font-family: "devil breeze";
+  font-size: 15em;
+  font-weight: bold;
+}
+.section .content-fit .title {
+  font-family: "devil breeze";
+  font-size: 5em;
+  font-weight: bold;
+}
+#description .content-fit {
+  padding-right: 30%;
+}
+#description .number {
+  font-size: 5em;
+}
+#description .title {
+  font-size: 7em;
+  font-weight: 500;
+}
+#contact .content-fit {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  text-align: center;
+}
+#contact table {
+  width: min(800px, 90vw);
+  padding-top: 2em;
+  font-size: 2em;
+  margin: auto;
+}
+#contact table td {
+  padding-block: 0.5em;
+  border-bottom: 1px dashed #445022;
+}
+#contact table td:nth-child(1) {
+  text-align: left;
+  font-weight: 500;
+}
+#contact table td:nth-child(2) {
+  text-align: right;
+  font-weight: 200;
+}
+#contact .sign {
+  font-size: 10em;
+}
+#container3D {
+  position: fixed;
+  inset: 0;
+  /* background-color: red; */
+  z-index: 100;
+  pointer-events: none;
+}
+@media screen and (max-width: 1023px) {
+  #banner .title {
+    font-size: 5em;
+  }
+  #intro .content-fit {
+    flex-direction: column;
+  }
+}
+@media screen and (max-width: 767px) {
+  #banner .title {
+    font-size: 3em;
+  }
+  #intro .content-fit {
+    flex-direction: column;
+  }
+  .section .number {
+    font-size: 5em;
+  }
+  .section .content-fit .title {
+    font-size: 2em;
+  }
+  #description .content-fit {
+    padding-right: 0;
+  }
+  #contact table {
+    font-size: 1em;
+  }
+  #contact .sign {
+    font-size: 2em;
+  }
+  #container3D {
+    position: sticky;
+  }
+}
+  </style>
+<script type="module">import * as THREE from "https://cdn.skypack.dev/three@0.129.0/build/three.module.js";
+import { GLTFLoader } from "https://cdn.skypack.dev/three@0.129.0/examples/jsm/loaders/GLTFLoader.js";
+import { gsap } from "https://cdn.skypack.dev/gsap";
+
+const camera = new THREE.PerspectiveCamera(
+  10,
+  window.innerWidth / window.innerHeight,
+  0.1,
+  1000
+);
+camera.position.z = 13;
+
+const scene = new THREE.Scene();
+let bee;
+let mixer;
+const loader = new GLTFLoader();
+
+// Fixed GLB URL - using raw.githubusercontent.com which serves with proper CORS headers
+loader.load(
+  "https://dl.dropboxusercontent.com/scl/fi/0q86rluo7p0d3nzhvsqjb/demon_bee_full_texture.glb?rlkey=4392gcgb1v4lyv3ufg7sf3r9m&raw=1",
+  function (gltf) {
+    bee = gltf.scene;
+    scene.add(bee);
+
+    mixer = new THREE.AnimationMixer(bee);
+    mixer.clipAction(gltf.animations[0]).play();
+    modelMove();
+  },
+  function (xhr) {
+    // Progress callback
+    console.log((xhr.loaded / xhr.total) * 100 + "% loaded");
+  },
+  function (error) {
+    // Error callback
+    console.error("Error loading model:", error);
+  }
+);
+
+const renderer = new THREE.WebGLRenderer({ alpha: true });
+renderer.setSize(window.innerWidth, window.innerHeight);
+document.getElementById("container3D").appendChild(renderer.domElement);
+
+// light
+const ambientLight = new THREE.AmbientLight(0xffffff, 1.3);
+scene.add(ambientLight);
+
+const topLight = new THREE.DirectionalLight(0xffffff, 1);
+topLight.position.set(500, 500, 500);
+scene.add(topLight);
+
+const reRender3D = () => {
+  requestAnimationFrame(reRender3D);
+  renderer.render(scene, camera);
+  if (mixer) mixer.update(0.02);
+};
+reRender3D();
+
+let arrPositionModel = [
+  {
+    id: "banner",
+    position: { x: 0, y: -1, z: 0 },
+    rotation: { x: 0, y: 1.5, z: 0 }
+  },
+  {
+    id: "intro",
+    position: { x: 1, y: -1, z: -5 },
+    rotation: { x: 0.5, y: -0.5, z: 0.5 }
+  },
+  {
+    id: "description",
+    position: { x: -1, y: -1, z: -5 },
+    rotation: { x: 0, y: 0.5, z: 0.2 }
+  },
+  {
+    id: "contact",
+    position: { x: 0.45, y: -2, z: -10 },
+    rotation: { x: 0.2, y: -0.5, z: -0.2 }
+  }
+];
+
+const modelMove = () => {
+  const sections = document.querySelectorAll(".section");
+  let currentSection;
+  sections.forEach((section) => {
+    const rect = section.getBoundingClientRect();
+    if (rect.top <= window.innerHeight / 3) {
+      currentSection = section.id;
+    }
+  });
+  let position_active = arrPositionModel.findIndex(
+    (val) => val.id == currentSection
+  );
+  if (position_active >= 0) {
+    let new_coordinates = arrPositionModel[position_active];
+    gsap.to(bee.position, {
+      x: new_coordinates.position.x,
+      y: new_coordinates.position.y,
+      z: new_coordinates.position.z,
+      duration: 3,
+      ease: "power1.out"
+    });
+    gsap.to(bee.rotation, {
+      x: new_coordinates.rotation.x,
+      y: new_coordinates.rotation.y,
+      z: new_coordinates.rotation.z,
+      duration: 3,
+      ease: "power1.out"
+    });
+  }
+};
+
+window.addEventListener("scroll", () => {
+  if (bee) {
+    modelMove();
+  }
+});
+
+window.addEventListener("resize", () => {
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+});
+</script><link rel="stylesheet" href="https://public.codepenassets.com/css/normalize-5.0.0.min.css">
+<link rel="stylesheet" href="./style.css">
+
+</head>
+<body>
+<!-- partial:index.partial.html -->
+<header>
+  <div class="content-fit">
+    <div class="logo">BR.Tech</div>
+   
+  </div>
+</header>
+<div class="section" id="banner">
+  <div class="content-fit">
+    <div class="title" data-before="3D ANIMATION">Jay Bhim</div>
+  </div>
+  <img src="https://assets.codepen.io/453571/flower.png" class="decorate" alt="" style="width: 50vw; bottom: 0; right: 0;">
+  <img src="https://assets.codepen.io/453571/leaf.png" class="decorate" alt="" style="width: 30vw; bottom: 0; left: 0;">
+</div>
+<div class="section" id="intro">
+  <div class="content-fit">
+    <div class="number">01</div>
+    <div class="des">
+      <div class="title">A.I Technology </div>
+      <p>
+ What is AI?
+
+Artificial Intelligence (AI) is a branch of computer science that enables machines and software to perform tasks that normally require human intelligence. These tasks include learning, reasoning, problem-solving, decision-making, and understanding natural language.
+
+
+---
+
+ Types of AI
+
+1. Narrow AI (Weak AI)
+
+Designed for a specific task.
+
+Example: Siri, Google Maps, Chatbots.
+
+
+
+2. General AI (Strong AI)
+
+Can perform any intellectual task like a human.
+
+Still in research and development.
+
+
+
+3. Super AI
+
+Hypothetical AI that surpasses human intelligence.
+
+Not yet achieved.
+
+
+
+
+
+---
+
+ Applications of AI
+
+Healthcare: Diagnosing diseases, medical imaging, drug discovery.
+
+Education: Personalized learning, AI tutors.
+
+Business: Chatbots, data analysis, fraud detection.
+
+Transportation: Self-driving cars, traffic management.
+
+Entertainment: Recommendation systems (Netflix, YouTube).
+
+Agriculture: Crop monitoring, smart irrigation.
+
+
+
+---
+
+ Benefits of AI
+
+Improves efficiency and accuracy.
+
+Saves time and reduces human effort.
+
+Can handle big data and complex tasks.
+
+Provides 24/7 availability (e.g., chatbots).
+
+
+
+---
+
+ Challenges of AI
+
+Job replacement due to automation.
+
+High development cost.
+
+Ethical issues (bias, misuse).
+
+Lack of human-like creativity and emotions.
+
+
+
+---
+
+
+      </p>
+    </div>
+  </div>
+</div>
+<div class="section" id="description">
+  <div class="content-fit">
+    <div class="number">02</div>
+    <div class="des">
+      <div class="title">BR.Tech</div>
+      <p>Okay! Here’s a clear explanation about Science and Technology in English:
+
+
+---
+
+ What is Science?
+
+Science is the study of the natural world through observation, experiments, and research.
+It helps us understand how things work in nature – like physics, chemistry, biology, astronomy, etc.
+
+
+---
+
+ What is Technology?
+
+Technology is the practical use of scientific knowledge to make tools, machines, systems, and solutions that improve human life.
+ In short: Science discovers, Technology applies.
+
+
+---
+
+ Relationship between Science & Technology
+
+Science gives us knowledge.
+
+Technology uses that knowledge to solve problems.
+For example:
+
+Science discovered electricity 
+Technology used it to create bulbs, fans, and computers 
+
+
+
+---
+
+ Importance of Science & Technology
+
+1. Healthcare – Medicines, vaccines, medical machines.
+
+
+2. Education – Online learning, digital libraries.
+
+
+3. Communication – Mobile phones, internet, satellites.
+
+
+4. Transportation – Cars, trains, airplanes.
+
+
+5. Agriculture – Modern equipment, irrigation, biotechnology.
+
+
+6. Space Research – Rockets, satellites, Mars missions.
+
+
+
+
+---
+
+ Benefits
+
+Makes life easier and faster.
+
+Increases comfort and convenience.
+
+Helps in economic growth.
+
+Connects the world globally.
+
+
+
+---
+
+ Challenges
+
+Overuse of technology can cause pollution.
+
+Misuse (cybercrime, weapons).
+
+Dependency on machines.
+
+
+
+---
+
+ In simple words:
+Science gives us knowledge about the world, and technology uses that knowledge to invent things that make our lives better. Both together shape modern society.
+
+
+---
+
+</p>
+    </div>
+  </div>
+  <img src="https://assets.codepen.io/453571/leaf1.png" class="decorate" alt="" style="width: 70vw; bottom: 0; right: 0;">
+</div>
+<div class="section" id="contact">
+  <div class="content-fit">
+    <div class="number">03</div>
+    <div class="des">
+      <div class="title">CONTACT</div>
+      <table>
+        <tr>
+          <td>Email</td>
+          <td>roshanwasnik5@gmail.com</td>
+        </tr>
+        <tr>
+          <td>Phone</td>
+          <td>+91 7559260870</td>
+        </tr>
+
+      </table>
+      <div class="sign">BR.Tech</div>
+    </div>
+  </div>
+</div>
+<div id="container3D"></div>
+<!-- partial -->
+  
+</body>
+</html>
